@@ -12,6 +12,14 @@ const eslintConfig = defineConfig([
     plugins: {
       prettier: prettierPlugin,
     },
+    settings: {
+      'import/resolver': {
+        typescript: {
+          alwaysTryTypes: true,
+          project: './tsconfig.json',
+        },
+      },
+    },
     rules: {
       // 关闭所有与 Prettier 冲突的 ESLint 规则
       ...prettierConfig.rules,
