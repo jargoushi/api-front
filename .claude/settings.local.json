@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": ["mcp__shadcn__get_project_registries", "mcp__shadcn__list_items_in_registries"],
+    "deny": [],
+    "ask": []
+  }
+}
