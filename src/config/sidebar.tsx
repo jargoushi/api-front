@@ -13,20 +13,20 @@ import {
   LucideIcon,
 } from 'lucide-react'
 
-// 菜单项接口定义
-export interface SidebarMenuItem {
+// 菜单项配置接口定义
+export interface SidebarConfigItem {
   title: string
   url: string
   isActive?: boolean
   icon?: LucideIcon
 }
 
-// 主菜单项接口定义
-export interface SidebarMainItem {
+// 主菜单配置接口定义
+export interface SidebarConfigGroup {
   title: string
   url: string
   icon?: LucideIcon
-  items?: SidebarMenuItem[]
+  items?: SidebarConfigItem[]
 }
 
 export const sidebarConfig = {

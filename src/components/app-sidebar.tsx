@@ -1,9 +1,10 @@
 'use client'
-import * as React from 'react'
-import { usePathname } from 'next/navigation' // 添加这个导入
-import { GalleryVerticalEnd, Minus, Plus } from 'lucide-react'
 
-import { SearchForm } from '@/components/search-form'
+import * as React from 'react'
+import { usePathname } from 'next/navigation'
+import { GalleryVerticalEnd } from 'lucide-react'
+
+// UI组件导入
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
   Sidebar,
@@ -18,13 +19,30 @@ import {
   SidebarMenuSubItem,
   SidebarRail,
 } from '@/components/ui/sidebar'
-import { sidebarConfig } from '@/config/sidebar'
+
+// 配置和类型导入 - 现在没有命名冲突了
+import { sidebarConfig, SidebarConfigGroup, SidebarConfigItem } from '@/config/sidebar'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const pathname = usePathname() // 获取当前路径
+  const pathname = usePathname()
+
+  /**
+   * 判断菜单项是否应该展开
+   * @param item 主菜单配置项
+   * @returns 是否应该展开
+   */
+  const shouldMenuBeOpen = (item: SidebarConfigGroup): boolean => {
+    if (!item.items) return false
+
+    return item.items.some(
+      (subItem: SidebarConfigItem) =>
+        pathname === subItem.url || (subItem.url !== '#' && pathname.startsWith(subItem.url))
+    )
+  }
 
   return (
     <Sidebar {...props}>
+      {/* ========== 侧边栏头部 ========== */}
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -40,34 +58,35 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-        <SearchForm />
       </SidebarHeader>
+
+      {/* ========== 侧边栏内容区域 ========== */}
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>
-            {sidebarConfig.navMain.map((item, index) => (
-              <Collapsible key={item.title} defaultOpen={index === 1} className="group/collapsible">
+            {sidebarConfig.navMain.map(item => (
+              <Collapsible
+                key={item.title}
+                defaultOpen={shouldMenuBeOpen(item)}
+                className="group/collapsible"
+              >
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton>
                       {item.icon && <item.icon className="mr-2 size-4" />}
-                      {item.title}{' '}
-                      <Plus className="ml-auto group-data-[state=open]/collapsible:hidden" />
-                      <Minus className="ml-auto group-data-[state=closed]/collapsible:hidden" />
+                      <span>{item.title}</span>
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
+
                   {item.items?.length ? (
                     <CollapsibleContent>
                       <SidebarMenuSub>
                         {item.items.map(subItem => (
                           <SidebarMenuSubItem key={subItem.title}>
-                            <SidebarMenuSubButton
-                              asChild
-                              isActive={pathname === subItem.url} // 动态判断激活状态
-                            >
+                            <SidebarMenuSubButton asChild isActive={pathname === subItem.url}>
                               <a href={subItem.url}>
                                 {subItem.icon && <subItem.icon className="mr-2 size-4" />}
-                                {subItem.title}
+                                <span>{subItem.title}</span>
                               </a>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
@@ -81,6 +100,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
+
+      {/* ========== 侧边栏拖拽调整器 ========== */}
       <SidebarRail />
     </Sidebar>
   )
