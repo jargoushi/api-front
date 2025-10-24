@@ -49,10 +49,15 @@ export const sidebarConfig = {
       ],
     },
     {
-      title: '应用管理',
+      title: '系统管理',
       url: '#',
       icon: Settings,
       items: [
+        {
+          title: '用户管理',
+          url: '/users',
+          icon: Users,
+        },
         {
           title: '路由管理',
           url: '#',
@@ -97,7 +102,7 @@ export const sidebarConfig = {
     {
       title: '社区资源',
       url: '#',
-      icon: Users,
+      icon: Globe,
       items: [
         {
           title: '贡献指南',

@@ -1,49 +1,40 @@
 import request from '@/lib/request'
-import { User, CreateUserDto } from './types'
-import { PageRequest, PageResponse } from '../types'
+import { UserResponse, UserCreateRequest, UserUpdateRequest, UserListParams } from './types'
+import { PageResponse } from '../types'
 
 /**
- * 获取用户列表（分页）
- * @param params 分页参数
- * @returns Promise<PageResponse<User>>
+ * 分页获取用户列表
+ * @param params 查询参数
+ * @returns Promise<PageResponse<UserResponse>>
  */
-export const fetchUserList = (params: PageRequest): Promise<PageResponse<User>> => {
-  return request.get('/users', { params })
+export const fetchUserList = (params: UserListParams = {}): Promise<PageResponse<UserResponse>> => {
+  return request.post('/api/users/pageList', {}, { params })
 }
 
 /**
  * 根据 ID 获取单个用户信息
- * @param id 用户 ID
- * @returns Promise<User>
+ * @param userId 用户 ID
+ * @returns Promise<UserResponse>
  */
-export const fetchUserById = (id: number): Promise<User> => {
-  return request.get(`/users/${id}`)
+export const fetchUserById = (userId: number): Promise<UserResponse> => {
+  return request.get(`/api/users/${userId}`)
 }
 
 /**
  * 创建新用户
  * @param data 用户数据
- * @returns Promise<User>
+ * @returns Promise<UserResponse>
  */
-export const createUser = (data: CreateUserDto): Promise<User> => {
-  return request.post('/users', data)
+export const createUser = (data: UserCreateRequest): Promise<UserResponse> => {
+  return request.post('/api/users/', data)
 }
 
 /**
  * 更新用户信息
- * @param id 用户 ID
+ * @param userId 用户 ID
  * @param data 要更新的用户数据
- * @returns Promise<User>
+ * @returns Promise<UserResponse>
  */
-export const updateUser = (id: number, data: Partial<CreateUserDto>): Promise<User> => {
-  return request.put(`/users/${id}`, data)
-}
-
-/**
- * 删除用户
- * @param id 用户 ID
- * @returns Promise<void>
- */
-export const deleteUser = (id: number): Promise<void> => {
-  return request.delete(`/users/${id}`)
+export const updateUser = (userId: number, data: UserUpdateRequest): Promise<UserResponse> => {
+  return request.put(`/api/users/${userId}`, data)
 }

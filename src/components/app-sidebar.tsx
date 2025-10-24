@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { usePathname } from 'next/navigation'
+import Link from 'next/link'
 import { GalleryVerticalEnd } from 'lucide-react'
 
 // UI组件导入
@@ -32,12 +33,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
    * @returns 是否应该展开
    */
   const shouldMenuBeOpen = (item: SidebarConfigGroup): boolean => {
-    if (!item.items) return false
+    // 如果有子菜单项，检查是否有匹配的子项
+    if (item.items && item.items.length > 0) {
+      return item.items.some(
+        (subItem: SidebarConfigItem) =>
+          pathname === subItem.url || (subItem.url !== '#' && pathname.startsWith(subItem.url))
+      )
+    }
 
-    return item.items.some(
-      (subItem: SidebarConfigItem) =>
-        pathname === subItem.url || (subItem.url !== '#' && pathname.startsWith(subItem.url))
-    )
+    // 如果没有子菜单项，检查当前主菜单项是否匹配
+    return pathname === item.url || (item.url !== '#' && pathname.startsWith(item.url))
   }
 
   return (
@@ -72,9 +77,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               >
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
-                    <SidebarMenuButton>
-                      {item.icon && <item.icon className="mr-2 size-4" />}
-                      <span>{item.title}</span>
+                    <SidebarMenuButton
+                      asChild={!item.items || item.items.length === 0}
+                      isActive={pathname === item.url}
+                    >
+                      {item.items && item.items.length > 0 ? (
+                        <>
+                          {item.icon && <item.icon className="mr-2 size-4" />}
+                          <span>{item.title}</span>
+                        </>
+                      ) : (
+                        <Link href={item.url}>
+                          {item.icon && <item.icon className="mr-2 size-4" />}
+                          <span>{item.title}</span>
+                        </Link>
+                      )}
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
 
@@ -84,10 +101,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         {item.items.map(subItem => (
                           <SidebarMenuSubItem key={subItem.title}>
                             <SidebarMenuSubButton asChild isActive={pathname === subItem.url}>
-                              <a href={subItem.url}>
+                              <Link href={subItem.url}>
                                 {subItem.icon && <subItem.icon className="mr-2 size-4" />}
                                 <span>{subItem.title}</span>
-                              </a>
+                              </Link>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
                         ))}
