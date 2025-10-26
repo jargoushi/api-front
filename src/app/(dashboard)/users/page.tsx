@@ -1,25 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import React from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { fetchUserList, fetchUserById, createUser, updateUser } from '@/api/user'
 import {
   UserResponse,
@@ -29,13 +12,11 @@ import {
 } from '@/api/user/types'
 import { useApi } from '@/hooks/useApi'
 import Pagination from '@/components/Pagination'
-
-// 主要状态管理
-interface DialogStates {
-  detail: boolean
-  create: boolean
-  edit: boolean
-}
+import SearchForm from '@/components/common/SearchForm'
+import DataTable from '@/components/common/DataTable'
+import EntityDialog from '@/components/common/EntityDialog'
+import { userConfig } from '@/config/modules/userConfig'
+import type { DialogMode } from '@/components/common/types'
 
 export default function UsersPage() {
   // 用户列表数据
@@ -68,14 +49,11 @@ export default function UsersPage() {
   const updateApi = useApi()
 
   // 弹窗状态
-  const [dialogs, setDialogs] = useState<DialogStates>({
-    detail: false,
-    create: false,
-    edit: false,
-  })
+  const [dialogMode, setDialogMode] = useState<DialogMode>('create')
+  const [dialogOpen, setDialogOpen] = useState(false)
 
   // 表单数据
-  const [formData, setFormData] = useState<UserCreateRequest & { is_active?: boolean }>({
+  const [formData, setFormData] = useState<Record<string, unknown>>({
     username: '',
     email: '',
     password: '',
@@ -102,7 +80,15 @@ export default function UsersPage() {
     const user = await detailApi.execute(() => fetchUserById(userId))
     if (user) {
       setSelectedUser(user)
-      setDialogs(prev => ({ ...prev, detail: true }))
+      setFormData({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        is_active: user.is_active,
+        created_at: new Date(user.created_at).toLocaleString(),
+      })
+      setDialogMode('view')
+      setDialogOpen(true)
     }
   }
 
@@ -117,15 +103,21 @@ export default function UsersPage() {
         password: '', // 编辑时密码为空
         is_active: user.is_active,
       })
-      setDialogs(prev => ({ ...prev, edit: true }))
+      setDialogMode('edit')
+      setDialogOpen(true)
     }
   }
 
   // 创建用户
   const handleCreateUser = async () => {
-    const result = await createApi.execute(() => createUser(formData as UserCreateRequest))
+    const createRequest: UserCreateRequest = {
+      username: formData.username as string,
+      email: formData.email as string,
+      password: formData.password as string,
+    }
+    const result = await createApi.execute(() => createUser(createRequest))
     if (result) {
-      setDialogs(prev => ({ ...prev, create: false }))
+      setDialogOpen(false)
       setFormData({ username: '', email: '', password: '', is_active: true })
       loadUsers() // 重新加载列表
     }
@@ -135,28 +127,56 @@ export default function UsersPage() {
   const handleUpdateUser = async () => {
     if (!selectedUser) return
 
-    const result = await updateApi.execute(() =>
-      updateUser(selectedUser.id, formData as UserUpdateRequest)
-    )
+    const updateRequest: UserUpdateRequest = {
+      username: formData.username as string,
+      email: formData.email as string,
+      is_active: formData.is_active as boolean,
+    }
+    const result = await updateApi.execute(() => updateUser(selectedUser.id, updateRequest))
     if (result) {
-      setDialogs(prev => ({ ...prev, edit: false }))
+      setDialogOpen(false)
       setSelectedUser(null)
       setFormData({ username: '', email: '', password: '', is_active: true })
       loadUsers() // 重新加载列表
     }
   }
 
+  // 处理弹窗提交
+  const handleDialogSubmit = () => {
+    if (dialogMode === 'create') {
+      handleCreateUser()
+    } else if (dialogMode === 'edit') {
+      handleUpdateUser()
+    }
+    // 'view' 模式下不执行提交，直接关闭
+  }
+
+  // 处理弹窗取消
+  const handleDialogCancel = () => {
+    setDialogOpen(false)
+    setSelectedUser(null)
+    setFormData({ username: '', email: '', password: '', is_active: true })
+  }
+
+  // 打开新增弹窗
+  const handleCreateUserClick = () => {
+    setFormData({ username: '', email: '', password: '', is_active: true })
+    setDialogMode('create')
+    setDialogOpen(true)
+  }
+
   // 搜索处理
   const handleSearch = () => {
-    loadUsers({
+    const params: UserListParams = {
       ...searchParams,
       page: 1,
-    })
+    }
+    loadUsers(params)
   }
 
   // 重置搜索
   const handleResetSearch = () => {
-    const params = {
+    const params: UserListParams = {
       page: 1,
       size: 10,
       username: null,
@@ -199,149 +219,52 @@ export default function UsersPage() {
       {/* 页面标题和操作区 */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">用户管理</h1>
-        <Button
-          onClick={() => {
-            setFormData({ username: '', email: '', password: '', is_active: true })
-            setDialogs(prev => ({ ...prev, create: true }))
-          }}
-        >
-          新增用户
-        </Button>
+        <Button onClick={handleCreateUserClick}>新增用户</Button>
       </div>
 
       {/* 搜索筛选表单 */}
-      <div className="bg-white p-4 rounded-lg border space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <Label htmlFor="username">用户名</Label>
-            <Input
-              id="username"
-              placeholder="请输入用户名"
-              value={searchParams.username || ''}
-              onChange={e =>
-                setSearchParams(prev => ({
-                  ...prev,
-                  username: e.target.value || null,
-                }))
-              }
-            />
-          </div>
-          <div>
-            <Label htmlFor="email">邮箱</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="请输入邮箱"
-              value={searchParams.email || ''}
-              onChange={e =>
-                setSearchParams(prev => ({
-                  ...prev,
-                  email: e.target.value || null,
-                }))
-              }
-            />
-          </div>
-          <div>
-            <Label htmlFor="status">状态</Label>
-            <select
-              id="status"
-              className="w-full h-10 px-3 py-2 text-sm border rounded-md"
-              value={
-                searchParams.is_active === null ? '' : searchParams.is_active ? 'true' : 'false'
-              }
-              onChange={e =>
-                setSearchParams(prev => ({
-                  ...prev,
-                  is_active: e.target.value === '' ? null : e.target.value === 'true',
-                }))
-              }
-            >
-              <option value="">全部</option>
-              <option value="true">启用</option>
-              <option value="false">禁用</option>
-            </select>
-          </div>
-          <div className="flex items-end space-x-2">
-            <Button onClick={handleSearch} disabled={listApi.loading}>
-              搜索
-            </Button>
-            <Button variant="outline" onClick={handleResetSearch}>
-              重置
-            </Button>
-          </div>
-        </div>
-      </div>
+      <SearchForm
+        fields={userConfig.searchFields}
+        values={searchParams as Record<string, unknown>}
+        onChange={values => setSearchParams(values as UserListParams)}
+        onSearch={handleSearch}
+        onReset={handleResetSearch}
+        loading={listApi.loading}
+      />
 
       {/* 用户列表表格 */}
-      <div className="bg-white rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>用户名</TableHead>
-              <TableHead>邮箱</TableHead>
-              <TableHead>状态</TableHead>
-              <TableHead>创建时间</TableHead>
-              <TableHead>更新时间</TableHead>
-              <TableHead>操作</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {listApi.loading ? (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center py-8">
-                  加载中...
-                </TableCell>
-              </TableRow>
-            ) : users.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center py-8">
-                  暂无数据
-                </TableCell>
-              </TableRow>
-            ) : (
-              users.map(user => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.id}</TableCell>
-                  <TableCell>{user.username}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs rounded-full ${
-                        user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {user.is_active ? '启用' : '禁用'}
-                    </span>
-                  </TableCell>
-                  <TableCell>{new Date(user.created_at).toLocaleString()}</TableCell>
-                  <TableCell>{new Date(user.updated_at).toLocaleString()}</TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => viewUser(user.id)}
-                        disabled={detailApi.loading}
-                      >
-                        查看
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => editUser(user.id)}
-                        disabled={detailApi.loading}
-                      >
-                        编辑
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <DataTable
+        columns={userConfig.tableColumns.map(col => ({
+          ...col,
+          render: (value: unknown): React.ReactNode => {
+            if (col.key === 'is_active') {
+              const isActive = Boolean(value)
+              return (
+                <span
+                  className={`inline-flex px-2 py-1 text-xs rounded-full ${
+                    isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}
+                >
+                  {isActive ? '启用' : '禁用'}
+                </span>
+              )
+            }
+            if (
+              (col.key === 'created_at' || col.key === 'updated_at') &&
+              typeof value === 'string'
+            ) {
+              return new Date(value).toLocaleString()
+            }
+            return value as React.ReactNode
+          },
+        }))}
+        data={users}
+        loading={listApi.loading}
+        actions={{
+          view: (user: UserResponse) => viewUser(user.id),
+          edit: (user: UserResponse) => editUser(user.id),
+        }}
+      />
 
       {/* 分页组件 */}
       <Pagination
@@ -351,170 +274,20 @@ export default function UsersPage() {
         loading={listApi.loading}
       />
 
-      {/* 用户详情弹窗 */}
-      <Dialog
-        open={dialogs.detail}
-        onOpenChange={open => setDialogs(prev => ({ ...prev, detail: open }))}
-      >
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>用户详情</DialogTitle>
-            <DialogDescription>查看用户的详细信息</DialogDescription>
-          </DialogHeader>
-          {selectedUser && (
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="detail-id">ID</Label>
-                <Input id="detail-id" value={selectedUser.id.toString()} disabled />
-              </div>
-              <div>
-                <Label htmlFor="detail-username">用户名</Label>
-                <Input id="detail-username" value={selectedUser.username} disabled />
-              </div>
-              <div>
-                <Label htmlFor="detail-email">邮箱</Label>
-                <Input id="detail-email" value={selectedUser.email} disabled />
-              </div>
-              <div>
-                <Label htmlFor="detail-status">状态</Label>
-                <Input
-                  id="detail-status"
-                  value={selectedUser.is_active ? '启用' : '禁用'}
-                  disabled
-                />
-              </div>
-              <div>
-                <Label htmlFor="detail-created">创建时间</Label>
-                <Input
-                  id="detail-created"
-                  value={new Date(selectedUser.created_at).toLocaleString()}
-                  disabled
-                />
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button onClick={() => setDialogs(prev => ({ ...prev, detail: false }))}>关闭</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* 新增用户弹窗 */}
-      <Dialog
-        open={dialogs.create}
-        onOpenChange={open => setDialogs(prev => ({ ...prev, create: open }))}
-      >
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>新增用户</DialogTitle>
-            <DialogDescription>创建一个新的用户账号</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="create-username">用户名</Label>
-              <Input
-                id="create-username"
-                value={formData.username || ''}
-                onChange={e => setFormData(prev => ({ ...prev, username: e.target.value }))}
-                placeholder="请输入用户名"
-              />
-            </div>
-            <div>
-              <Label htmlFor="create-email">邮箱</Label>
-              <Input
-                id="create-email"
-                type="email"
-                value={formData.email || ''}
-                onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                placeholder="请输入邮箱"
-              />
-            </div>
-            <div>
-              <Label htmlFor="create-password">密码</Label>
-              <Input
-                id="create-password"
-                type="password"
-                value={formData.password || ''}
-                onChange={e => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                placeholder="请输入密码"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDialogs(prev => ({ ...prev, create: false }))}
-            >
-              取消
-            </Button>
-            <Button onClick={handleCreateUser} disabled={createApi.loading}>
-              {createApi.loading ? '创建中...' : '创建'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* 编辑用户弹窗 */}
-      <Dialog
-        open={dialogs.edit}
-        onOpenChange={open => setDialogs(prev => ({ ...prev, edit: open }))}
-      >
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>编辑用户</DialogTitle>
-            <DialogDescription>修改用户信息</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="edit-username">用户名</Label>
-              <Input
-                id="edit-username"
-                value={formData.username || ''}
-                onChange={e => setFormData(prev => ({ ...prev, username: e.target.value }))}
-                placeholder="请输入用户名"
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-email">邮箱</Label>
-              <Input
-                id="edit-email"
-                type="email"
-                value={formData.email || ''}
-                onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                placeholder="请输入邮箱"
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-status">状态</Label>
-              <select
-                id="edit-status"
-                className="w-full h-10 px-3 py-2 text-sm border rounded-md"
-                value={formData.is_active ? 'true' : 'false'}
-                onChange={e =>
-                  setFormData(prev => ({
-                    ...prev,
-                    is_active: e.target.value === 'true',
-                  }))
-                }
-              >
-                <option value="true">启用</option>
-                <option value="false">禁用</option>
-              </select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDialogs(prev => ({ ...prev, edit: false }))}
-            >
-              取消
-            </Button>
-            <Button onClick={handleUpdateUser} disabled={updateApi.loading}>
-              {updateApi.loading ? '更新中...' : '更新'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* 通用实体弹窗 */}
+      <EntityDialog
+        mode={dialogMode}
+        title={
+          dialogMode === 'create' ? '新增用户' : dialogMode === 'edit' ? '编辑用户' : '用户详情'
+        }
+        fields={userConfig.formFields[dialogMode]}
+        values={formData}
+        onChange={setFormData}
+        onSubmit={handleDialogSubmit}
+        onCancel={handleDialogCancel}
+        loading={createApi.loading || updateApi.loading}
+        open={dialogOpen}
+      />
     </div>
   )
 }

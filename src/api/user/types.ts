@@ -5,7 +5,6 @@ export interface UserResponse {
   email: string
   is_active: boolean
   created_at: string
-  updated_at: string
 }
 
 // 创建用户的请求体模型
