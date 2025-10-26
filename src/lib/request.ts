@@ -49,9 +49,9 @@ request.interceptors.response.use(
       console.log('✅ API业务成功，返回数据:', apiResponse.data)
 
       // 显示成功提示，1秒后自动消失
-      toast.success('操作成功', {
-        duration: 1000,
-      })
+      // toast.success('操作成功', {
+      //   duration: 1000,
+      // })
 
       // 直接返回 data 部分，剥离外层包装
       return apiResponse.data
