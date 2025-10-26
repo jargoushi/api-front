@@ -93,10 +93,10 @@
   --muted-foreground: oklch(0.705 0.015 286.067);
   --accent: oklch(0.274 0.006 286.033);
   --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --destructive: oklch(0.627 0.265 29.23);
+  --border: oklch(1 0 0 / 15%);
+  --input: oklch(0.98 0.006 286.32);
+  --ring: oklch(0.556 0.043 275);
   --chart-1: oklch(0.809 0.105 251.813);
   --chart-2: oklch(0.623 0.214 259.815);
   --chart-3: oklch(0.546 0.245 262.881);
@@ -118,5 +118,28 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  /* 深色模式下的表格行交替背景色 */
+  .dark tbody tr:nth-child(even) {
+    @apply bg-muted/30;
+  }
+
+  /* 确保输入框在深色模式下有足够的对比度 */
+  .dark input,
+  .dark select,
+  .dark textarea {
+    @apply bg-background text-foreground border-border;
+  }
+
+  /* 状态标签在深色模式下更好的对比度 */
+  .dark .status-enabled {
+    @apply bg-emerald-600 text-white;
+  }
+
+  .dark .status-disabled {
+    @apply bg-red-600 text-white;
   }
 }

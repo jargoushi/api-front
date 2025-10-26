@@ -20,17 +20,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { User, Moon, Sun } from 'lucide-react'
-import { useTheme } from 'next-themes'
+import { User } from 'lucide-react'
+import ThemeToggle from '@/components/ThemeToggle'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { theme, setTheme } = useTheme()
   const breadcrumb = useBreadcrumb()
   const displayBreadcrumb = filterBreadcrumbForDisplay(breadcrumb)
-
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark')
-  }
 
   return (
     <SidebarProvider>
@@ -67,14 +62,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           {/* 主题切换和用户头像下拉菜单 */}
           <div className="flex items-center gap-4">
-            {/* 主题切换按钮 */}
-            <button
-              onClick={toggleTheme}
-              className="flex items-center justify-center w-9 h-9 rounded-md border bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
-              aria-label="切换主题"
-            >
-              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </button>
+            {/* 使用独立的主题切换组件 */}
+            <ThemeToggle />
 
             {/* 用户头像下拉菜单 */}
             <DropdownMenu>

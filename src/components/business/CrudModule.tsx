@@ -239,7 +239,7 @@ export default function CrudModule<T, TParams, TCreate, TUpdate>({
     <div className={'w-full space-y-6'}>
       {/* 错误提示 */}
       {state.error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        <div className="bg-destructive/15 border border-destructive/30 text-destructive px-4 py-3 rounded">
           {state.error}
         </div>
       )}
@@ -279,8 +279,10 @@ export default function CrudModule<T, TParams, TCreate, TUpdate>({
               const isActive = Boolean(value)
               return (
                 <span
-                  className={`inline-flex px-2 py-1 text-xs rounded-full ${
-                    isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  className={`inline-flex px-2 py-1 text-xs rounded-full font-medium ${
+                    isActive
+                      ? 'bg-emerald-600 text-white status-enabled'
+                      : 'bg-red-600 text-white status-disabled'
                   }`}
                 >
                   {isActive ? '启用' : '禁用'}

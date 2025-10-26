@@ -46,7 +46,7 @@ export default function SearchForm({
         return (
           <select
             id={`search-${field.key}`}
-            className="w-full h-10 px-3 py-2 text-sm border rounded-md"
+            className="w-full h-10 px-3 py-2 text-sm border rounded-md bg-background text-foreground"
             value={value === null || value === undefined ? '' : String(value)}
             onChange={e => {
               const newValue = e.target.value
@@ -90,7 +90,7 @@ export default function SearchForm({
   }
 
   return (
-    <div className="bg-white p-4 rounded-lg border space-y-4">
+    <div className="bg-card p-4 rounded-lg border space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {fields.map(field => (
           <div key={field.key}>

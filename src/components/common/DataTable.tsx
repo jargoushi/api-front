@@ -83,7 +83,7 @@ export default function DataTable<T = Record<string, unknown>>({
           variant="outline"
           size="sm"
           onClick={() => actions.delete!(record)}
-          className="text-red-600 hover:text-red-700 border-red-300 hover:border-red-400"
+          className="text-destructive hover:text-destructive border-destructive/30 hover:border-destructive/50"
         >
           删除
         </Button>
@@ -94,7 +94,7 @@ export default function DataTable<T = Record<string, unknown>>({
   }
 
   return (
-    <div className="bg-white rounded-lg border">
+    <div className="bg-card rounded-lg border">
       <Table>
         <TableHeader>
           <TableRow>
