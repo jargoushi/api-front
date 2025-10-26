@@ -28,6 +28,7 @@ import {
   UserListParams,
 } from '@/api/user/types'
 import { useApi } from '@/hooks/useApi'
+import Pagination from '@/components/Pagination'
 
 // 主要状态管理
 interface DialogStates {
@@ -171,6 +172,16 @@ export default function UsersPage() {
     loadUsers({
       ...searchParams,
       page,
+    })
+  }
+
+  // 每页条数变化处理
+  const handleSizeChange = (size: number) => {
+    setPagination(prev => ({ ...prev, size }))
+    loadUsers({
+      ...searchParams,
+      page: 1,
+      size,
     })
   }
 
@@ -333,107 +344,12 @@ export default function UsersPage() {
       </div>
 
       {/* 分页组件 */}
-      {(pagination.pages > 1 || pagination.total > 0) && (
-        <div className="flex items-center justify-between">
-          {/* 左侧：分页控件 */}
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(pagination.page - 1)}
-              disabled={pagination.page <= 1}
-            >
-              上一页
-            </Button>
-
-            {/* 页码显示逻辑 */}
-            <div className="flex items-center space-x-1">
-              {Array.from({ length: pagination.pages }, (_, i) => i + 1).map(page => {
-                if (
-                  page === 1 ||
-                  page === pagination.pages ||
-                  (page >= pagination.page - 1 && page <= pagination.page + 1)
-                ) {
-                  return (
-                    <Button
-                      key={page}
-                      variant={page === pagination.page ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handlePageChange(page)}
-                      className="w-8 h-8 p-0"
-                    >
-                      {page}
-                    </Button>
-                  )
-                } else if (page === pagination.page - 2 || page === pagination.page + 2) {
-                  return (
-                    <span key={page} className="px-2 text-muted-foreground">
-                      ...
-                    </span>
-                  )
-                }
-                return null
-              })}
-            </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(pagination.page + 1)}
-              disabled={pagination.page >= pagination.pages}
-            >
-              下一页
-            </Button>
-
-            {/* 每页显示条数选择器 */}
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-muted-foreground">每页显示</span>
-              <select
-                value={pagination.size}
-                onChange={e => {
-                  const newSize = parseInt(e.target.value)
-                  setPagination(prev => ({ ...prev, size: newSize }))
-                  loadUsers({
-                    ...searchParams,
-                    page: 1,
-                    size: newSize,
-                  })
-                }}
-                className="h-8 px-2 text-sm border rounded-md"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-            </div>
-
-            {/* 跳转到指定页码 */}
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-muted-foreground">跳转到</span>
-              <Input
-                type="number"
-                min={1}
-                max={pagination.pages}
-                value={pagination.page}
-                onChange={e => {
-                  const page = parseInt(e.target.value)
-                  if (page >= 1 && page <= pagination.pages) {
-                    handlePageChange(page)
-                  }
-                }}
-                className="w-16 h-8 text-sm"
-              />
-              <span className="text-sm text-muted-foreground">页</span>
-            </div>
-          </div>
-
-          {/* 右侧：记录统计 */}
-          <div className="text-sm text-muted-foreground">
-            总共 {pagination.total} 条记录；每页显示 {pagination.size} 条记录
-          </div>
-        </div>
-      )}
+      <Pagination
+        pagination={pagination}
+        onPageChange={handlePageChange}
+        onSizeChange={handleSizeChange}
+        loading={listApi.loading}
+      />
 
       {/* 用户详情弹窗 */}
       <Dialog
