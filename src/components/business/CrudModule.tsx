@@ -236,7 +236,7 @@ export default function CrudModule<T, TParams, TCreate, TUpdate>({
   const showSearch = features.search !== false
 
   return (
-    <div className={'container mx-auto p-6 space-y-6'}>
+    <div className={'w-full space-y-6'}>
       {/* 错误提示 */}
       {state.error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
