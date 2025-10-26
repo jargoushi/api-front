@@ -2,7 +2,7 @@
 'use client'
 
 import React, { useState, useEffect, useMemo } from 'react'
-import ModuleHeader from './ModuleHeader'
+import { Button } from '@/components/ui/button'
 import SearchForm from '@/components/common/SearchForm'
 import DataTable from '@/components/common/DataTable'
 import EntityDialog from '@/components/common/EntityDialog'
@@ -244,16 +244,7 @@ export default function CrudModule<T, TParams, TCreate, TUpdate>({
         </div>
       )}
 
-      {/* 模块头部 */}
-      <ModuleHeader
-        title={config.title}
-        actions={customComponents?.headerActions}
-        onCreate={showCreate ? handleCreate : () => {}}
-        showCreateButton={showCreate}
-        createButtonText={config.texts?.createButtonText}
-      />
-
-      {/* 搜索表单 */}
+      {/* 搜索表单 - 最上方 */}
       {showSearch && (
         <>
           {customComponents?.beforeSearch}
@@ -269,7 +260,15 @@ export default function CrudModule<T, TParams, TCreate, TUpdate>({
         </>
       )}
 
-      {/* 数据表格 */}
+      {/* 整体操作区域 - 搜索表单下方 */}
+      <div className="flex justify-end space-x-2">
+        {customComponents?.headerActions}
+        {showCreate && (
+          <Button onClick={handleCreate}>{config.texts?.createButtonText || '新增'}</Button>
+        )}
+      </div>
+
+      {/* 数据表格 - 操作区域下方 */}
       {customComponents?.beforeTable}
       <DataTable
         columns={config.tableColumns.map(col => ({
@@ -314,7 +313,7 @@ export default function CrudModule<T, TParams, TCreate, TUpdate>({
       )}
       {customComponents?.afterTable}
 
-      {/* 分页 */}
+      {/* 分页 - 表格下方 */}
       <Pagination
         pagination={state.pagination}
         onPageChange={handlePageChange}

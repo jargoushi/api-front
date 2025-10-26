@@ -79,17 +79,6 @@ export interface CrudModuleProps<T, TParams, TCreate, TUpdate> {
 }
 
 /**
- * 模块头部组件属性接口
- */
-export interface ModuleHeaderProps {
-  title: string
-  actions?: React.ReactNode
-  onCreate: () => void
-  showCreateButton?: boolean
-  createButtonText?: string
-}
-
-/**
  * 内部状态接口
  */
 export interface CrudModuleState<T, TParams> {
