@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { sidebarConfig, SidebarConfigItem } from '@/config/sidebar'
+import { sidebarConfig } from '@/config/sidebar'
 
 // 面包屑项类型定义
 export interface BreadcrumbItem {
